@@ -49,7 +49,7 @@ from diffusers.utils.import_utils import is_xformers_available
 
 
 # Will error if the minimal version of diffusers is not installed. Remove at your own risks.
-check_min_version("0.25.0.dev0")
+#check_min_version("0.25.0.dev0")
 
 logger = get_logger(__name__, log_level="INFO")
 
@@ -404,6 +404,7 @@ def parse_args():
 
 DATASET_NAME_MAPPING = {
     "lambdalabs/pokemon-blip-captions": ("image", "text"),
+    "jxu124/OpenX-Embodiment": ('data.pickle')
 }
 
 
@@ -566,10 +567,11 @@ def main():
         # See more about loading custom images at
         # https://huggingface.co/docs/datasets/v2.4.0/en/image_load#imagefolder
 
+    # dataset = datasets.load_dataset("jxu124/OpenX-Embodiment", "fractal20220817_data", streaming=True, split='train')
     # Preprocessing the datasets.
     # We need to tokenize inputs and targets.
     column_names = dataset["train"].column_names
-
+    print(column_names)
     # 6. Get the column names for input/target.
     dataset_columns = DATASET_NAME_MAPPING.get(args.dataset_name, None)
     if args.image_column is None:
