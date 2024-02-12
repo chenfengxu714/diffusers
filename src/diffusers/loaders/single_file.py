@@ -17,17 +17,11 @@ from pathlib import Path
 
 import requests
 import torch
+import yaml
 from huggingface_hub import hf_hub_download
 from huggingface_hub.utils import validate_hf_hub_args
 
-from ..utils import (
-    deprecate,
-    is_accelerate_available,
-    is_omegaconf_available,
-    is_transformers_available,
-    logging,
-)
-from ..utils.import_utils import BACKENDS_MAPPING
+from ..utils import deprecate, is_accelerate_available, is_transformers_available, logging
 
 
 if is_transformers_available():
@@ -169,10 +163,12 @@ class FromSingleFileMixin:
         load_safety_checker = kwargs.pop("load_safety_checker", True)
         prediction_type = kwargs.pop("prediction_type", None)
         text_encoder = kwargs.pop("text_encoder", None)
+        text_encoder_2 = kwargs.pop("text_encoder_2", None)
         vae = kwargs.pop("vae", None)
         controlnet = kwargs.pop("controlnet", None)
         adapter = kwargs.pop("adapter", None)
         tokenizer = kwargs.pop("tokenizer", None)
+        tokenizer_2 = kwargs.pop("tokenizer_2", None)
 
         torch_dtype = kwargs.pop("torch_dtype", None)
 
@@ -274,8 +270,10 @@ class FromSingleFileMixin:
             load_safety_checker=load_safety_checker,
             prediction_type=prediction_type,
             text_encoder=text_encoder,
+            text_encoder_2=text_encoder_2,
             vae=vae,
             tokenizer=tokenizer,
+            tokenizer_2=tokenizer_2,
             original_config_file=original_config_file,
             config_files=config_files,
             local_files_only=local_files_only,
@@ -366,11 +364,6 @@ class FromOriginalVAEMixin:
         model = AutoencoderKL.from_single_file(url)
         ```
         """
-        if not is_omegaconf_available():
-            raise ValueError(BACKENDS_MAPPING["omegaconf"][1])
-
-        from omegaconf import OmegaConf
-
         from ..models import AutoencoderKL
 
         # import here to avoid circular dependency
@@ -448,7 +441,7 @@ class FromOriginalVAEMixin:
             config_url = "https://raw.githubusercontent.com/CompVis/stable-diffusion/main/configs/stable-diffusion/v1-inference.yaml"
             config_file = BytesIO(requests.get(config_url).content)
 
-        original_config = OmegaConf.load(config_file)
+        original_config = yaml.safe_load(config_file)
 
         # default to sd-v1-5
         image_size = image_size or 512
@@ -459,10 +452,10 @@ class FromOriginalVAEMixin:
         if scaling_factor is None:
             if (
                 "model" in original_config
-                and "params" in original_config.model
-                and "scale_factor" in original_config.model.params
+                and "params" in original_config["model"]
+                and "scale_factor" in original_config["model"]["params"]
             ):
-                vae_scaling_factor = original_config.model.params.scale_factor
+                vae_scaling_factor = original_config["model"]["params"]["scale_factor"]
             else:
                 vae_scaling_factor = 0.18215  # default SD scaling factor
 
